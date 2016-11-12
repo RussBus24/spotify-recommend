@@ -32,20 +32,22 @@ app.get('/search/:name', function(req, res) {
         var relatedRequest = getFromApi('artists/' + artist.id + '/related-artists');
         relatedRequest.on('end', function(result) {
             artist.related = result.artists;
-            var tracksRequest = getFromApi('artists/' + artist.id + '/top-tracks?country=SE');
-                tracksRequest('data', function(data) {
-                    
-                });
+            var count = 0;
+            artist.related.forEach(function(relatedArtist) {
+            var tracksRequest = getFromApi('artists/' + relatedArtist.id + '/top-tracks?country=SE');
                 
                 tracksRequest.on('end', function(result) {
-                    artist.tracks = result.tracks;
+                    relatedArtist.tracks = result.tracks;
+                    count++;
+                    if (count === artist.related.length) {
+                        res.json(artist);
+                    }
                 });
                     tracksRequest.on('error', function(code) {
                     res.sendStatus(code);
                     });
-                
-            console.log(artist.tracks);
-            return res.json(artist);
+            });
+               
         });
         relatedRequest.on('error', function(code) {
            res.sendStatus(code); 
